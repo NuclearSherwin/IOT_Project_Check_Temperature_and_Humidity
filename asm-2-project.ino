@@ -22,17 +22,18 @@
 #include <LiquidCrystal_I2C.h>
 #include <Firebase_ESP_Client.h>
 
-#define BLYNK_TEMPLATE_ID "TMPLnwt3Nh1O"
-#define BLYNK_DEVICE_NAME "ASM2IOT"
-#define BLYNK_AUTH_TOKEN "WvI6ezlz3VqSeZqqPPc0dKKvS1n-8v5u"
+
+#define BLYNK_TEMPLATE_ID "TMPLybkKXDmX"
+#define BLYNK_DEVICE_NAME "ASM2ProjectIOT"
+#define BLYNK_AUTH_TOKEN "jH6LnAbVSqhq7q7xOhGjDWlfgKm535qj"
 
 
 
 /* 2. Define the API Key */
-#define API_KEY "AIzaSyCqLz9R6CjuNGH9PtF48brU6hG4Bb-VM5g"
+#define API_KEY "AIzaSyCh8iTt7fam00T67gr_s464P9M_NB6dkJU"
 
 /* 3. Define the RTDB URL */
-#define DATABASE_URL "https://asm2-oit-default-rtdb.firebaseio.com/" //<dat
+#define DATABASE_URL "https://iot-project-dae34-default-rtdb.asia-southeast1.firebasedatabase.app/" //<dat
 // Define Firebase Data object
 FirebaseData fbdo;
 
@@ -47,19 +48,15 @@ bool signupOK = false;
 
 #define digital1  D0
 #define digital2  D1
+#define DHTPIN D2   
+
+int val;
+DHT dht;
 
 char auth[] = BLYNK_AUTH_TOKEN;
 char ssid[] = "Henryy";//Enter your WIFI name
 char pass[] = "quyhoang25082012";//Enter your WIFI password
 
-int val;
-DHT dht;
-
-#define DHTPIN D2          // Digital pin 3
-// #define DHTTYPE DHT11
-//#define DHTTYPE DHT22     
-
-// DHT dht(DHTPIN, DHTTYPE);
 
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -75,7 +72,7 @@ void setup()
 {
   Serial.begin(9600);
   // Blynk.begin(auth, ssid, pass);
-  pinMode(digital2, OUTPUT);
+  // pinMode(digital2, OUTPUT);
   dht.setup(DHTPIN);
 
 
@@ -131,45 +128,11 @@ void loop()
     // digitalWrite(digital2,LOW);
     Sensor();
   }
-  else if (val==0){
+  else {
     Serial.print(val);
-    // digitalWrite(digital2,HIGH);
     lcd.clear();
   }
 
-  delay(1000);
-  float h = dht.getHumidity();
-
-  float t = dht.getTemperature();
-
-  if (Firebase.ready() && signupOK ) {
-    
-    if (Firebase.RTDB.setFloat(&fbdo, "DHT/humidity",h)){
-//      Serial.println("PASSED");
-       Serial.print("Humidity: ");
-       Serial.println(h);
-      
-    }
-    else {
-      Serial.println("FAILED");
-      Serial.println("REASON: " + fbdo.errorReason());
-    }
-    
-    
-    // Write an Float number on the database path test/float
-    if (Firebase.RTDB.setFloat(&fbdo, "DHT/temperature", t)){
-//      Serial.println("PASSED");
-       Serial.print("Temperature: ");
-       Serial.println(t);
-    }
-    else {
-      Serial.println("FAILED");
-      Serial.println("REASON: " + fbdo.errorReason());
-    }
-  }
-  Serial.println("____________________________");
-  
-  
 }
 
 void Sensor()
@@ -185,9 +148,10 @@ void Sensor()
   Serial.println("Temperature: " + String(t) + " C");
   delay(1000);
 
-  
-  // Blynk.virtualWrite(V5, h);  //V5 is for Humidity
-  // Blynk.virtualWrite(V6, t);  //V6 is for Temperature
+  // Update Blynk data
+  Blynk.virtualWrite(V1, t);  // Temperature
+  Blynk.virtualWrite(V2, h);     // Humididty
+
   
   // Turn on the blacklight and print a message.
   lcd.display();
@@ -200,5 +164,33 @@ void Sensor()
   lcd.setCursor(0, 1);
   lcd.print("Humidity " + String(h) + "%");
   delay(800);
-  
+
+
+  // display on firebase 
+  delay(1000);
+  if (Firebase.ready() && signupOK ) {
+      if (Firebase.RTDB.setFloat(&fbdo, "DHT/humidity",h)){
+        // Serial.println("PASSED");
+       Serial.print("Humidity: ");
+       Serial.println(h);
+      
+    }
+    else {
+      Serial.println("FAILED");
+      Serial.println("REASON: " + fbdo.errorReason());
+    }
+    
+    
+    // Write an Float number on the database path test/float
+    if (Firebase.RTDB.setFloat(&fbdo, "DHT/temperature", t)){
+        //Serial.println("PASSED");
+       Serial.print("Temperature: ");
+       Serial.println(t);
+    }
+    else {
+      Serial.println("FAILED");
+      Serial.println("REASON: " + fbdo.errorReason());
+    }
+  }
+  Serial.println("____________________________");
 }
